@@ -5,6 +5,8 @@ dword = construct.Int32ul
 byte = construct.Int8ul
 qword = construct.Int64ul
 float = construct.Float32l
+single = construct.Float32l
+integer = construct.Int32ul
 
 
 uuid = construct.Sequence(dword, word, word, word, construct.BytesInteger(6))
@@ -175,3 +177,99 @@ sized_ascii = construct.StringEncoded(
     construct.Prefixed(idx, construct.GreedyBytes), "ascii"
 )
 sized_ascii._emitseq = longstring_emitseq
+
+
+class If(construct.IfThenElse):
+    r"""
+    If-then conditional construct.
+
+    This implementation will build if the condition cannot be evaluated
+    provided that subcon is passed.
+
+    Parsing evaluates condition, if True then subcon is parsed, otherwise just returns None. Building also evaluates condition, if True then subcon gets build from, otherwise does nothing. Size is either same as subcon or 0, depending how condfunc evaluates.
+
+    :param condfunc: bool or context lambda (or a truthy value)
+    :param subcon: Construct instance, used if condition indicates True
+
+    :raises StreamError: requested reading negative amount, could not read enough bytes, requested writing different amount than actual data, or could not write all bytes
+
+    Can propagate any exception from the lambda, possibly non-ConstructError.
+
+    Example::
+
+        If <--> IfThenElse(condfunc, subcon, Pass)
+
+        >>> d = If(this.x > 0, Byte)
+        >>> d.build(255, x=1)
+        b'\xff'
+        >>> d.build(255, x=0)
+        b''
+    """
+
+    def __init__(self, condfunc, thensubcon):
+        super(If, self).__init__(condfunc, thensubcon, construct.Pass)
+
+    def _build(self, obj, stream, context, path):
+        condfunc = self.condfunc
+        try:
+            if callable(condfunc):
+                condfunc = condfunc(context)
+            sc = self.thensubcon if condfunc else self.elsesubcon
+            return sc._build(obj, stream, context, path)
+        except KeyError:
+            return self.thensubcon._build(obj, stream, context, path)
+
+
+class Computed(construct.Construct):
+    r"""
+    Field computing a value from the context dictionary or some outer source like os.urandom or random module. Underlying byte stream is unaffected. The source can be non-deterministic.
+
+    Parsing and Building return the value returned by the context lambda (although a constant value can also be used). Size is defined as 0 because parsing and building does not consume or produce bytes into the stream.
+
+    :param func: context lambda or constant value
+
+    Can propagate any exception from the lambda, possibly non-ConstructError.
+
+    Example::
+        >>> d = Struct(
+        ...     "width" / Byte,
+        ...     "height" / Byte,
+        ...     "total" / Computed(this.width * this.height),
+        ... )
+        >>> d.build(dict(width=4,height=5))
+        b'\x04\x05'
+        >>> d.parse(b"12")
+        Container(width=49, height=50, total=2450)
+
+        >>> d = Computed(7)
+        >>> d.parse(b"")
+        7
+        >>> d = Computed(lambda ctx: 7)
+        >>> d.parse(b"")
+        7
+
+        >>> import os
+        >>> d = Computed(lambda ctx: os.urandom(10))
+        >>> d.parse(b"")
+        b'\x98\xc2\xec\x10\x07\xf5\x8e\x98\xc2\xec'
+    """
+
+    def __init__(self, func):
+        super(Computed, self).__init__()
+        self.func = func
+        self.flagbuildnone = True
+
+    def _parse(self, stream, context, path):
+        try:
+            return self.func(context) if callable(self.func) else self.func
+        except KeyError:
+            return None
+
+    def _build(self, obj, stream, context, path):
+        return construct.Pass._build(obj, stream, context, path)
+
+    def _sizeof(self, context, path):
+        return 0
+
+    def _emitparse(self, code):
+        return "%r" % (self.func,)

@@ -30,7 +30,7 @@ from construct import (
 import construct
 from construct.lib import byte2int, integertypes, int2byte
 
-from module_types import idx, word, dword, qword, uuid, string
+from module_types import idx, word, dword, qword, uuid, string, Computed, If
 from enums import object_flags, package_flags
 from ut_objects import ut_object_map
 
@@ -100,7 +100,6 @@ export_object = Struct(
             x.sup_index
         )
     ),
-    Probe(),
     "object"
     / If(
         this.serial_size,

@@ -6,15 +6,14 @@ from construct import (
     Probe,
     HexDump,
     Bytes,
-    If,
     RepeatUntil,
     Tell,
-    Pointer
+    Pointer,
 )
-from module_types import byte, idx, word, dword, qword, float, sized_ascii_z, uuid
+from module_types import byte, idx, word, dword, qword, float, sized_ascii_z, uuid, If, Computed
 import enums
 from properties import ut_property
-
+from ut_structs import polygon, color, named_bone, motion_chunk, analog_track, url
 
 state_frame = Struct(
     "node" / idx,
@@ -54,7 +53,7 @@ palette = Struct(
     *ut_object.subcons,
     "color_count" / idx,
     "colors"
-    / Struct("blue" / byte, "green" / byte, "red" / byte, "reserved" / byte)[
+    / color[
         this.color_count
     ],
 )
@@ -114,11 +113,36 @@ texture = Struct(
 )
 scripted_texture = Struct(*ut_object.subcons,)
 primitive = Struct(*ut_object.subcons,)
-polys = Struct(*ut_object.subcons,)
-brush = Struct(*ut_object.subcons,)
-level_base = Struct(*ut_object.subcons,)
-animation = Struct(*ut_object.subcons,)
-package_check_info = Struct(*ut_object.subcons,)
+polys = Struct(
+    *ut_object.subcons,
+    "num_polys" / dword,
+    "poly_count" / dword,
+    "polygons" / polygon[this.poly_count]
+)
+brush = Struct(*ut_object.subcons,)  # done
+level_base = Struct(
+    *ut_object.subcons,
+    "size" / dword,
+    "actors" / idx[this.size],
+    "url" / url
+)
+animation = Struct(
+    *ut_object.subcons,
+    "num_ref_bones" / idx,
+    "ref_bones" / named_bone[this.num_ref_bones],
+    "num_moves" / idx,
+    "motion_chunks" / motion_chunk[this.num_moves],
+    "num_anims" / idx,
+    "anim_seqs" / analog_track[this.num_anims]
+)
+package_check_info = Struct(
+    *ut_object.subcons,
+    "package_md5" / sized_ascii_z,
+    "num_md5s" / idx,
+    "md5s" / sized_ascii_z,
+    "unk1" / dword,
+    "unk2" / dword
+)
 
 
 struct = Struct(
@@ -131,6 +155,7 @@ struct = Struct(
     "text_pos" / dword,
     "script_size" / dword,
 )
+
 state = Struct(
     *struct.subcons,
     "probe_mask" / qword,
