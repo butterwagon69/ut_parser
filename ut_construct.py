@@ -25,7 +25,7 @@ from construct import (
     encodingunit,
     FlagsEnum,
     Switch,
-    Int32sl
+    Int32sl,
 )
 import construct
 from construct.lib import byte2int, integertypes, int2byte
@@ -46,14 +46,14 @@ def get_object_path(path, limit, index):
             break
         elif index < 0:
             if abs(index) <= len(import_table):
-                i = import_table[abs(index)-1]
+                i = import_table[abs(index) - 1]
                 s = name_table[i.object_index].name + "."
                 index = 1 if index == i.package_index else i.package_index
             else:
                 s, result, limit = "", "", 1
         elif index > 0:
             if index <= len(export_table):
-                e = export_table[index-1]
+                e = export_table[index - 1]
                 s = name_table[e.object_index].name + "."
                 index = 1 if index == e.group_index else e.group_index
             else:
@@ -72,34 +72,16 @@ export_header = Struct(
     "flags" / object_flags,
     "serial_size" / idx,
     "serial_offset" / If(this.serial_size, idx),
-    "data" / Pointer(this.serial_offset, HexDump(Bytes(this.serial_size)))
+    "data" / Pointer(this.serial_offset, HexDump(Bytes(this.serial_size))),
 )
 
 
 export_object = Struct(
     *export_header.subcons,
-    "cls_name" / Computed(
-        lambda x: get_object_path(
-            x,
-            1,
-            x.cls_index
-        )
-    ),
+    "cls_name" / Computed(lambda x: get_object_path(x, 1, x.cls_index)),
     "obj_name" / Computed(lambda x: x._root.names[x.object_index].name),
-    "group_name" / Computed(
-        lambda x: get_object_path(
-            x,
-            -1,
-            x.group_index
-        )
-    ),
-    "sup_name" / Computed(
-        lambda x: get_object_path(
-            x,
-            -1,
-            x.sup_index
-        )
-    ),
+    "group_name" / Computed(lambda x: get_object_path(x, -1, x.group_index)),
+    "sup_name" / Computed(lambda x: get_object_path(x, -1, x.sup_index)),
     "object"
     / If(
         this.serial_size,
@@ -136,8 +118,7 @@ import_object = Struct(
     "package_index" / Int32sl,
     "object_index" / idx,
     "object_name" / Computed(lambda x: x._root.names[x.object_index]),
-    "class_package_name"
-    / Computed(lambda x: x._root.names[x.class_package_index]),
+    "class_package_name" / Computed(lambda x: x._root.names[x.class_package_index]),
     "class_name" / Computed(lambda x: x._root.names[x.class_index]),
     # TODO: use "get_object_path"
     # "package_name" / Computed(lambda x: x._.names[x.package_index])
@@ -147,18 +128,13 @@ package = Struct(
     "header" / header,
     "names" / Pointer(this.header.name_offset, name[this.header.name_count]),
     "import_objs"
-    / Pointer(
-        this.header.import_offset, import_object[this.header.import_count]
-    ),
+    / Pointer(this.header.import_offset, import_object[this.header.import_count]),
     "export_headers"
     / Pointer(
         # this.header.export_offset, export_object[this.header.export_count]
         this.header.export_offset,
-        export_header[this.header.export_count]
+        export_header[this.header.export_count],
     ),
     "export_objects"
-    / Pointer(
-        this.header.export_offset,
-        export_object[this.header.export_count]
-    ),
+    / Pointer(this.header.export_offset, export_object[this.header.export_count]),
 )

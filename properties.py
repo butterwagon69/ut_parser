@@ -16,12 +16,10 @@ from enums import property_types
 
 property_info = Struct(
     "info"
-    / BitStruct(
-        "is_array" / Flag, "size" / BitsInteger(3), "type" / property_types,
-    ),
-    "name_index"
+    / BitStruct("is_array" / Flag, "size" / BitsInteger(3), "type" / property_types,),
+    "struct_index"
     / IfThenElse(this.info.type == property_types.struct, idx, Computed(0)),
-    "name" / Computed(lambda x: x._root.names[x.name_index].name),
+    "struct_name" / Computed(lambda x: x._root.names[x.struct_index].name),
     "size"
     / Switch(
         this.info.size,
@@ -43,34 +41,46 @@ property_info = Struct(
         Computed(-1),
     ),
 )
-
-
-type_switch = Switch(
-    this.property_info.type,
+type_name_map = Switch(
+    this._.property_info.info.type,
     {
-        property_types.bool: Struct(
-            "value" / Computed(lambda x: x._.info.is_array),
-        ),
-        property_types.byte: Struct(
-            "value" / Bytes(this._.property_info.size)
-        ),
-    }
+        property_types.none: Computed(""),
+        property_types.byte: Computed("Byte"),
+        property_types.int: Computed("Int"),
+        property_types.bool: Computed("Bool"),
+        property_types.float: Computed("Float"),
+        property_types.object: Computed("Object"),
+        property_types.name: Computed("Name"),
+        property_types.string: Computed("String"),
+        property_types.cls: Computed("Class"),
+        property_types.array: Computed("Array"),
+        property_types.struct: Computed("Struct"),
+        property_types.vector: Computed("Vector"),
+        property_types.rotator: Computed("Rotator"),
+        property_types.str: Computed("Str"),
+        property_types.map: Computed("Map"),
+        property_types.fixed_array: Computed("FixedArray"),
+        property_types.word: Computed("Word"),
+    },
 )
+
+bytestruct = Struct("value_type_name" / type_name_map)
 
 ut_property = Struct(
     "name_index" / idx,
-    "name" / Computed(lambda x: x._root.names[x.name_index].name),
+    "prop_name" / Computed(lambda x: x._root.names[x.name_index].name),
     "more" / Computed(this.name_index != 0),
-    "data"
+    "value"
     / If(
         this.more,
         Struct(
             "property_info" / property_info,
-            "data" / IfThenElse(
+            "data"
+            / IfThenElse(
                 lambda x: x.property_info.info.type == property_types.bool,
                 Computed(this.property_info.info.is_array),
-                Bytes(this.property_info.size)
-            )
+                Bytes(this.property_info.size),
+            ),
         ),
     ),
 )
