@@ -10,8 +10,20 @@ from construct import (
     Switch,
     IfThenElse,
     Bytes,
+    PascalString,
+    Byte,
 )
-from module_types import byte, idx, word, dword, prop_idx, If, Computed
+from module_types import (
+    byte,
+    idx,
+    word,
+    dword,
+    prop_idx,
+    If,
+    Computed,
+    float,
+    sized_ascii_z,
+)
 from enums import property_types
 
 property_info = Struct(
@@ -41,30 +53,40 @@ property_info = Struct(
         Computed(-1),
     ),
 )
-type_name_map = Switch(
+_raw_type = Struct("value" / Bytes(this._.property_info.size))
+_string_type = Struct("value" / PascalString(idx, "utf8"))  # only for version < 120
+value_switch = Switch(
     this._.property_info.info.type,
     {
-        property_types.none: Computed(""),
+        property_types.none: Struct("value" / Computed(0)),
         property_types.byte: Computed("Byte"),
-        property_types.int: Computed("Int"),
-        property_types.bool: Computed("Bool"),
-        property_types.float: Computed("Float"),
-        property_types.object: Computed("Object"),
-        property_types.name: Computed("Name"),
-        property_types.string: Computed("String"),
-        property_types.cls: Computed("Class"),
+        property_types.int: Struct("value" / dword),
+        property_types.bool: Struct(
+            "raw" / Byte, "value" / Computed(lambda x: bool(x.raw))
+        ),
+        property_types.float: Struct("value" / float),
+        property_types.object: Struct(
+            "index" / idx, "value" / Computed(this._root.export_headers[this.idx - 1])
+        ),
+        property_types.name: Struct(
+            "index" / idx, "value" / Computed(this._root.names[this.index].name)
+        ),
+        property_types.string: _string_type,
+        property_types.cls: Struct(
+            "index" / idx,
+            "value" / Computed(lambda x: get_object_path(x, -1, x.index)),
+        ),
         property_types.array: Computed("Array"),
         property_types.struct: Computed("Struct"),
         property_types.vector: Computed("Vector"),
         property_types.rotator: Computed("Rotator"),
-        property_types.str: Computed("Str"),
-        property_types.map: Computed("Map"),
-        property_types.fixed_array: Computed("FixedArray"),
-        property_types.word: Computed("Word"),
+        property_types.str: _string_type,
+        property_types.map: _raw_type,
+        property_types.fixed_array: _raw_type,
+        property_types.buffer: _raw_type,
+        property_types.word: Struct("value" / word),
     },
 )
-
-bytestruct = Struct("value_type_name" / type_name_map)
 
 ut_property = Struct(
     "name_index" / idx,

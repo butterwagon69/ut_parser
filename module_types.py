@@ -121,23 +121,16 @@ class PropIdx(construct.Construct):
         if to_write <= 0x7F:
             construct.stream_write(stream, construct.int2byte(to_write), 1)
         elif to_write <= 0x7FFF:
-            construct.stream_write(
-                stream, construct.int2byte(to_write >> 8 | 0x80), 1
-            )
-            construct.stream_write(
-                stream, construct.int2byte(to_write & 0xFF), 1
-            )
+            construct.stream_write(stream, construct.int2byte(to_write >> 8 | 0x80), 1)
+            construct.stream_write(stream, construct.int2byte(to_write & 0xFF), 1)
         else:
-            construct.stream_write(
-                stream, construct.int2byte(to_write >> 24 | 0xC0), 1
-            )
+            construct.stream_write(stream, construct.int2byte(to_write >> 24 | 0xC0), 1)
             for i in range(3):
                 construct.stream_write(
-                    stream,
-                    construct.int2byte(to_write >> (2 - i) * 8 & 0xFF),
-                    1,
+                    stream, construct.int2byte(to_write >> (2 - i) * 8 & 0xFF), 1,
                 )
         return obj
+
 
 prop_idx = PropIdx()
 

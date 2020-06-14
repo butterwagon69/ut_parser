@@ -65,8 +65,4 @@ entdict3 = {obj.obj_name: obj for obj in map3.export_objects}
 # with open(map3path, "rb") as f1, open(map3newpath, "rb") as f2:
 #     print_diff(f1.read(), f2.read())
 # print("Hello!")
-
-for object1, object2 in zip(map3.export_objects, map4.export_objects):
-    if (object1 != object2) and (object1.obj_name == object2.obj_name):
-        print(object1)
-        print(object2)
+print(map1)

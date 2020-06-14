@@ -67,7 +67,7 @@ property_types = Enum(
     str=13,
     map=14,
     fixed_array=15,
-    extended_value=16,
+    buffer=16,
     word=17,
 )
 
