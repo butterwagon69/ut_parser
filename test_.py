@@ -65,4 +65,11 @@ entdict3 = {obj.obj_name: obj for obj in map3.export_objects}
 # with open(map3path, "rb") as f1, open(map3newpath, "rb") as f2:
 #     print_diff(f1.read(), f2.read())
 # print("Hello!")
-print(map1)
+# print(map4)
+for obj in map4.export_objects:
+    try:
+        props = obj.object.property
+    except:
+        props = []
+    for prop in props:
+        print(props)

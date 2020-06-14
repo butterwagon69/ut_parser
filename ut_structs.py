@@ -1,31 +1,23 @@
 from module_types import single, integer, idx, dword, word, byte, sized_ascii_z
 from construct import Struct, this, Computed, Probe
 
-color = Struct(
-    'R' / byte,
-    'G' / byte,
-    'B' / byte,
-    'A' / byte
-)
+color = Struct("R" / byte, "G" / byte, "B" / byte, "A" / byte)
 
 vector = Struct("x" / single, "y" / single, "z" / single)
 
-pointregion = Struct()
+pointregion = Struct("zone" / idx, "ileaf" / integer, "zonenumber" / byte)
 
 rotator = Struct("yaw" / integer, "roll" / integer, "pitch" / integer)
 
-scale = Struct()
+scale = Struct(
+    "x" / single, "y" / single, "z" / single, "sheerrate" / single, "sheeraxis" / byte
+)
 
 plane = Struct(*vector.subcons, "w" / single)
 
-sphere = Struct()
+sphere = Struct(*plane.subcons)
 
-quat = Struct(
-    "x" / single,
-    "y" / single,
-    "z" / single,
-    "w" / single
-)
+quat = Struct("x" / single, "y" / single, "z" / single, "w" / single)
 
 polygon = Struct(
     "vertex_array_size" / idx,
@@ -44,15 +36,11 @@ polygon = Struct(
     "pan_v_base" / word,
     "pan_u"
     / Computed(
-        lambda x: x.pan_u_base | 0xFFFF0000
-        if x.pan_u_base > 0x8000
-        else x.pan_u_base
+        lambda x: x.pan_u_base | 0xFFFF0000 if x.pan_u_base > 0x8000 else x.pan_u_base
     ),
     "pan_v"
     / Computed(
-        lambda x: x.pan_v_base | 0xFFFF0000
-        if x.pan_v_base > 0x8000
-        else x.pan_v_base
+        lambda x: x.pan_v_base | 0xFFFF0000 if x.pan_v_base > 0x8000 else x.pan_v_base
     ),
 )
 
@@ -64,14 +52,10 @@ url = Struct(
     "options" / sized_ascii_z[this.size],
     "portal" / sized_ascii_z,
     "port" / dword,
-    "valid" / dword
+    "valid" / dword,
 )
 
-named_bone = Struct(
-    "name_idx" / idx,
-    "flags" / dword,
-    "parent_index" / dword,
-)
+named_bone = Struct("name_idx" / idx, "flags" / dword, "parent_index" / dword,)
 
 analog_track = Struct(
     "flags" / dword,
@@ -80,7 +64,7 @@ analog_track = Struct(
     "num_key_pos" / idx,
     "key_pos" / vector,
     "num_key_times" / idx,
-    "key_times" / single[this.num_key_times]
+    "key_times" / single[this.num_key_times],
 )
 
 motion_chunk = Struct(
@@ -92,7 +76,7 @@ motion_chunk = Struct(
     "bone_indeces" / dword[this.num_indeces],
     "num_anims" / idx,
     "anim_tracks" / analog_track[this.num_anims],
-    "root_track" / analog_track
+    "root_track" / analog_track,
 )
 
 struct_map = {

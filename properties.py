@@ -12,6 +12,7 @@ from construct import (
     Bytes,
     PascalString,
     Byte,
+    Union,
 )
 from module_types import (
     byte,
@@ -25,6 +26,16 @@ from module_types import (
     sized_ascii_z,
 )
 from enums import property_types
+
+from ut_structs import (
+    color,
+    vector,
+    pointregion,
+    rotator,
+    scale,
+    plane,
+    sphere,
+)
 
 property_info = Struct(
     "info"
@@ -53,8 +64,21 @@ property_info = Struct(
         Computed(-1),
     ),
 )
-_raw_type = Struct("value" / Bytes(this._.property_info.size))
+
+_struct_types = {
+    "Color": color,
+    "Vector": vector,
+    "PointRegion": pointregion,
+    "Rotator": rotator,
+    "Scale": scale,
+    "Plane": plane,
+    "Sphere": sphere,
+}
+
+_raw_type = Struct("value" / Bytes(this.property_info._.size))
+
 _string_type = Struct("value" / PascalString(idx, "utf8"))  # only for version < 120
+
 value_switch = Switch(
     this._.property_info.info.type,
     {
@@ -66,10 +90,11 @@ value_switch = Switch(
         ),
         property_types.float: Struct("value" / float),
         property_types.object: Struct(
-            "index" / idx, "value" / Computed(this._root.export_headers[this.idx - 1])
+            "index" / idx,
+            "value" / Computed(lambda x: x._root.export_headers[x.index - 1]),
         ),
         property_types.name: Struct(
-            "index" / idx, "value" / Computed(this._root.names[this.index].name)
+            "index" / idx, "value" / Computed(lambda x: x._root.names[x.index].name)
         ),
         property_types.string: _string_type,
         property_types.cls: Struct(
@@ -77,7 +102,9 @@ value_switch = Switch(
             "value" / Computed(lambda x: get_object_path(x, -1, x.index)),
         ),
         property_types.array: Computed("Array"),
-        property_types.struct: Computed("Struct"),
+        property_types.struct: Struct(
+            "value" / Switch(this._._.property_info.struct_name, _struct_types)
+        ),
         property_types.vector: Computed("Vector"),
         property_types.rotator: Computed("Rotator"),
         property_types.str: _string_type,
@@ -101,7 +128,9 @@ ut_property = Struct(
             / IfThenElse(
                 lambda x: x.property_info.info.type == property_types.bool,
                 Computed(this.property_info.info.is_array),
-                Bytes(this.property_info.size),
+                Union(
+                    0, "raw" / Bytes(this._.property_info.size), "parse" / value_switch
+                ),
             ),
         ),
     ),
