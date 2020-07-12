@@ -75,26 +75,24 @@ _struct_types = {
     "Sphere": sphere,
 }
 
-_raw_type = Struct("value" / Bytes(this.property_info._.size))
+_raw_type = Bytes(this.property_info.size)
 
-_string_type = Struct("value" / PascalString(idx, "utf8"))  # only for version < 120
+_string_type = PascalString(idx, "utf8")  # only for version < 120
 
 value_switch = Switch(
-    this._.property_info.info.type,
+    this.property_info.info.type,
     {
-        property_types.none: Struct("value" / Computed(0)),
-        property_types.byte: Computed("Byte"),
-        property_types.int: Struct("value" / dword),
-        property_types.bool: Struct(
-            "raw" / Byte, "value" / Computed(lambda x: bool(x.raw))
+        property_types.name_: Struct(
+            "index" / idx, "value" / Computed(lambda x: x._root.names[x.index].name),
         ),
-        property_types.float: Struct("value" / float),
+        property_types.none: Computed(0),
+        property_types.byte: Byte,
+        property_types.int: dword,
+        property_types.bool: Computed(this.property_info.info.is_array),
+        property_types.float: float,
         property_types.object: Struct(
             "index" / idx,
             "value" / Computed(lambda x: x._root.export_headers[x.index - 1]),
-        ),
-        property_types.name: Struct(
-            "index" / idx, "value" / Computed(lambda x: x._root.names[x.index].name)
         ),
         property_types.string: _string_type,
         property_types.cls: Struct(
@@ -102,16 +100,14 @@ value_switch = Switch(
             "value" / Computed(lambda x: get_object_path(x, -1, x.index)),
         ),
         property_types.array: Computed("Array"),
-        property_types.struct: Struct(
-            "value" / Switch(this._._.property_info.struct_name, _struct_types)
-        ),
+        property_types.struct: Switch(this.property_info.struct_name, _struct_types),
         property_types.vector: Computed("Vector"),
         property_types.rotator: Computed("Rotator"),
         property_types.str: _string_type,
         property_types.map: _raw_type,
         property_types.fixed_array: _raw_type,
         property_types.buffer: _raw_type,
-        property_types.word: Struct("value" / word),
+        property_types.word: word,
     },
 )
 
@@ -124,14 +120,7 @@ ut_property = Struct(
         this.more,
         Struct(
             "property_info" / property_info,
-            "data"
-            / IfThenElse(
-                lambda x: x.property_info.info.type == property_types.bool,
-                Computed(this.property_info.info.is_array),
-                Union(
-                    0, "raw" / Bytes(this._.property_info.size), "parse" / value_switch
-                ),
-            ),
+            "data" / value_switch,
         ),
     ),
 )

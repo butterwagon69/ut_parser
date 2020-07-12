@@ -46,7 +46,7 @@ class Idx(construct.Construct):
         depth = 0
         while True:
             length = self.lengths[i]
-            bits = construct.byte2int(construct.stream_read(stream, 1))
+            bits = construct.byte2int(construct.stream_read(stream, 1, path))
             mask = self._get_data_mask(length)
             data = bits & mask
             more = self._get_more_bit(length) & bits
@@ -77,7 +77,7 @@ class Idx(construct.Construct):
             more_bit = (to_write > 0) and self._get_more_bit(length)
             byte |= more_bit
             byte &= 0xFF
-            construct.stream_write(stream, construct.int2byte(byte), 1)
+            construct.stream_write(stream, construct.int2byte(byte), 1, path)
             if not more_bit:
                 break
         return obj
@@ -95,18 +95,18 @@ class PropIdx(construct.Construct):
     """
 
     def _parse(self, stream, context, path):
-        index_b = construct.byte2int(construct.stream_read(stream, 1))
+        index_b = construct.byte2int(construct.stream_read(stream, 1, path))
         morethan1 = index_b & 0x80
         morethan2 = index_b & 0x40
         if not morethan1:
             return index_b
         elif morethan1 and not morethan2:
-            index_c = construct.byte2int(construct.stream_read(stream, 1))
+            index_c = construct.byte2int(construct.stream_read(stream, 1, path))
             return ((index_b & 0x7F) << 8) | index_c
         else:
             res = (index_b & 0x3F) << 24
             for i in range(3):
-                num = construct.byte2int(construct.stream_read(stream, 1))
+                num = construct.byte2int(construct.stream_read(stream, 1, path))
                 res |= num << (8 * (2 - i))
             return res
 
@@ -119,15 +119,19 @@ class PropIdx(construct.Construct):
             raise ValueError("Value too large to encode")
         to_write = obj
         if to_write <= 0x7F:
-            construct.stream_write(stream, construct.int2byte(to_write), 1)
+            construct.stream_write(stream, construct.int2byte(to_write), 1, path)
         elif to_write <= 0x7FFF:
-            construct.stream_write(stream, construct.int2byte(to_write >> 8 | 0x80), 1)
-            construct.stream_write(stream, construct.int2byte(to_write & 0xFF), 1)
+            construct.stream_write(
+                stream, construct.int2byte(to_write >> 8 | 0x80), 1, path
+            )
+            construct.stream_write(stream, construct.int2byte(to_write & 0xFF), 1, path)
         else:
-            construct.stream_write(stream, construct.int2byte(to_write >> 24 | 0xC0), 1)
+            construct.stream_write(
+                stream, construct.int2byte(to_write >> 24 | 0xC0), 1, path
+            )
             for i in range(3):
                 construct.stream_write(
-                    stream, construct.int2byte(to_write >> (2 - i) * 8 & 0xFF), 1,
+                    stream, construct.int2byte(to_write >> (2 - i) * 8 & 0xFF), 1, path
                 )
         return obj
 

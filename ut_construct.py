@@ -26,6 +26,7 @@ from construct import (
     FlagsEnum,
     Switch,
     Int32sl,
+    RawCopy,
 )
 import construct
 from construct.lib import byte2int, integertypes, int2byte
@@ -106,7 +107,8 @@ header = Struct(
     "import_offset" / dword,
     "uuid" / uuid,
     "generation_info_count" / dword,
-    "export_count" / dword,
+    "export_count" / dword, # this needs to be repeated genreation_info_count times
+    "name_count" / dword,
 )
 
 name = Struct("name" / string, "pointer" / dword)
@@ -126,9 +128,10 @@ import_object = Struct(
 
 package = Struct(
     "header" / header,
-    "names" / Pointer(this.header.name_offset, name[this.header.name_count]),
+    "header_indexed" / Pointer(0, RawCopy(header)),
+    "names" / (Pointer(this.header.name_offset, name[this.header.name_count])),
     "import_objs"
-    / Pointer(this.header.import_offset, import_object[this.header.import_count]),
+    / (Pointer(this.header.import_offset, import_object[this.header.import_count])),
     "export_headers"
     / Pointer(
         # this.header.export_offset, export_object[this.header.export_count]
@@ -136,5 +139,5 @@ package = Struct(
         export_header[this.header.export_count],
     ),
     "export_objects"
-    / Pointer(this.header.export_offset, export_object[this.header.export_count]),
+    / (Pointer(this.header.export_offset, export_object[this.header.export_count])),
 )

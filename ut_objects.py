@@ -31,7 +31,7 @@ ut_object = Struct(
         this._.cls_index,
         RepeatUntil(lambda x,lst,ctx: not x.more, ut_property
         )
-    ),
+    )
 )
 
 # code
@@ -94,7 +94,6 @@ text_buffer = Struct(
 font = Struct(*ut_object.subcons,)
 texture = Struct(
     *ut_object.subcons,
-    "burn" / byte,
     "mip_map_count" / byte,
     "img_data" / Struct(
         "pos_after" / dword,
