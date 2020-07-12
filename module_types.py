@@ -1,4 +1,5 @@
 import construct
+from functools import partial
 
 word = construct.Int16ul
 dword = construct.Int32ul
@@ -258,7 +259,8 @@ class Computed(construct.Construct):
 
     def _parse(self, stream, context, path):
         try:
-            return self.func(context) if callable(self.func) else self.func
+            res = self.func(context) if callable(self.func) else self.func
+            return res
         except KeyError:
             return None
 

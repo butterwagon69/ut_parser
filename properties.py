@@ -1,6 +1,5 @@
 from construct import (
     Struct,
-    Computed,
     If,
     this,
     BitStruct,
@@ -24,6 +23,7 @@ from module_types import (
     Computed,
     float,
     sized_ascii_z,
+    Computed,
 )
 from enums import property_types
 
@@ -116,11 +116,5 @@ ut_property = Struct(
     "prop_name" / Computed(lambda x: x._root.names[x.name_index].name),
     "more" / Computed(this.name_index != 0),
     "value"
-    / If(
-        this.more,
-        Struct(
-            "property_info" / property_info,
-            "data" / value_switch,
-        ),
-    ),
+    / If(this.more, Struct("property_info" / property_info, "data" / value_switch,),),
 )

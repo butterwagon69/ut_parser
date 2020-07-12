@@ -1,6 +1,5 @@
 from construct import (
     Struct,
-    Computed,
     If,
     this,
     Probe,
@@ -10,10 +9,37 @@ from construct import (
     Tell,
     Pointer,
 )
-from module_types import byte, idx, word, dword, qword, float, sized_ascii_z, uuid, If, Computed
+from module_types import (
+    byte,
+    idx,
+    word,
+    dword,
+    qword,
+    float,
+    sized_ascii_z,
+    uuid,
+    If,
+    Computed,
+)
 import enums
 from properties import ut_property
-from ut_structs import polygon, color, named_bone, motion_chunk, analog_track, url
+from ut_structs import (
+    polygon,
+    color,
+    named_bone,
+    motion_chunk,
+    analog_track,
+    url,
+    bounding_box,
+    bounding_sphere,
+    bsp_node,
+    bsp_surface,
+    vector,
+    f_vertex,
+    zone,
+    lightmap,
+    leaf,
+)
 
 state_frame = Struct(
     "node" / idx,
@@ -27,11 +53,8 @@ ut_object = Struct(
     "start_pos" / Tell,
     "flags" / Computed(this._.flags),
     "state_frame" / If(this.flags.HasStack, state_frame),
-    "property" / If(
-        this._.cls_index,
-        RepeatUntil(lambda x,lst,ctx: not x.more, ut_property
-        )
-    )
+    "property"
+    / If(this._.cls_index, RepeatUntil(lambda x, lst, ctx: not x.more, ut_property)),
 )
 
 # code
@@ -47,15 +70,10 @@ property = Struct(
     "rep_offset" / If(this.property_flags.net, word),
     "comment" / If(this.property_flags.editor_data, sized_ascii_z),
 )
-object_property = Struct(*property.subcons, "object" / idx, )
+object_property = Struct(*property.subcons, "object" / idx,)
 
 palette = Struct(
-    *ut_object.subcons,
-    "color_count" / idx,
-    "colors"
-    / color[
-        this.color_count
-    ],
+    *ut_object.subcons, "color_count" / idx, "colors" / color[this.color_count],
 )
 sound = Struct(
     *ut_object.subcons,
@@ -95,7 +113,8 @@ font = Struct(*ut_object.subcons,)
 texture = Struct(
     *ut_object.subcons,
     "mip_map_count" / byte,
-    "img_data" / Struct(
+    "img_data"
+    / Struct(
         "pos_after" / dword,
         "block_size" / idx,
         "start" / Tell,
@@ -111,19 +130,20 @@ texture = Struct(
     # Compression
 )
 scripted_texture = Struct(*ut_object.subcons,)
-primitive = Struct(*ut_object.subcons,)
+primitive = Struct(
+    *ut_object.subcons,
+    "primitive_bounding_box" / bounding_box,
+    "primitive_bounding_sphere" / bounding_sphere,
+)
 polys = Struct(
     *ut_object.subcons,
     "num_polys" / dword,
     "poly_count" / dword,
-    "polygons" / polygon[this.poly_count]
+    "polygons" / polygon[this.poly_count],
 )
 brush = Struct(*ut_object.subcons,)  # done
 level_base = Struct(
-    *ut_object.subcons,
-    "size" / dword,
-    "actors" / idx[this.size],
-    "url" / url
+    *ut_object.subcons, "size" / dword, "actors" / idx[this.size], "url" / url
 )
 animation = Struct(
     *ut_object.subcons,
@@ -132,7 +152,7 @@ animation = Struct(
     "num_moves" / idx,
     "motion_chunks" / motion_chunk[this.num_moves],
     "num_anims" / idx,
-    "anim_seqs" / analog_track[this.num_anims]
+    "anim_seqs" / analog_track[this.num_anims],
 )
 package_check_info = Struct(
     *ut_object.subcons,
@@ -140,7 +160,7 @@ package_check_info = Struct(
     "num_md5s" / idx,
     "md5s" / sized_ascii_z,
     "unk1" / dword,
-    "unk2" / dword
+    "unk2" / dword,
 )
 
 
@@ -160,26 +180,57 @@ state = Struct(
     "probe_mask" / qword,
     "ignore_mask" / qword,
     "label_table_offset" / word,
-    "state_flags" / dword
+    "state_flags" / dword,
 )
+
 class_ = Struct(
     *state.subcons,
     "class_flags" / dword,
     "class_uuid" / uuid,
     "dependencies_array_size" / idx,
-    "dependencies" / Struct(
-        "class" / idx,
-        "deep" / dword,
-        "crc" / dword
-    )[this.dependencies_array_size],
+    "dependencies"
+    / Struct("class" / idx, "deep" / dword, "crc" / dword)[
+        this.dependencies_array_size
+    ],
     "package_import_count" / idx,
     "package_imports" / idx[this.package_import_count],
     "class_within" / idx,
     "config_name" / idx,
-    "properties" /
-    RepeatUntil(lambda x,lst,ctx: not x.more, ut_property),
+    "properties" / RepeatUntil(lambda x, lst, ctx: not x.more, ut_property),
 )
 
+model = Struct(
+    *primitive.subcons,
+    "num_vectors" / idx,
+    "vectors" / vector[this.num_vectors],
+    "num_points" / idx,
+    "points" / vector[this.num_points],
+    "num_nodes" / idx,
+    "nodes" / bsp_node[this.num_nodes],
+    "num_surfaces" / idx,
+    "surfaces" / bsp_surface[this.num_surfaces],
+    "num_vertices" / idx,
+    "vertices" / f_vertex[this.num_vertices],
+    "num_shared_sides" / dword,
+    "num_zones" / idx,
+    "zones" / zone[this.num_zones],
+    "num_polys" / idx,
+    "num_lightmaps" / idx,
+    "lightmaps" / lightmap[this.num_lightmaps],
+    "num_lightbits" / idx,
+    "lightbits" / byte[this.num_lightbits],
+    "burn" / byte[2],  # Unknown missing bytes
+    "num_bounds" / idx,
+    "bounds" / bounding_box[this.num_bounds],
+    "num_leafhulls" / idx,
+    "leafhulls" / dword[this.num_leafhulls],
+    "num_leaves" / idx,
+    "leaves" / leaf[this.num_leaves],
+    "num_lights" / idx,
+    "lights" / idx[this.num_lights],
+    "root_outside" / dword,
+    "linked" / dword,
+)
 
 
 # 2d Objects
@@ -208,7 +259,7 @@ index_animation = ut_object
 index_buffer = ut_object
 # brush = ut_object
 mover = ut_object
-model = ut_object
+# model = ut_object
 # polys = ut_object
 # Sounds
 # sound = ut_object

@@ -107,7 +107,7 @@ header = Struct(
     "import_offset" / dword,
     "uuid" / uuid,
     "generation_info_count" / dword,
-    "export_count" / dword, # this needs to be repeated genreation_info_count times
+    "export_count" / dword,  # this needs to be repeated genreation_info_count times
     "name_count" / dword,
 )
 

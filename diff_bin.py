@@ -55,6 +55,7 @@ def print_seq(seq, width):
         line = get_line(line_toks)
         print(line)
 
+
 def get_line(line_toks):
     chars = []
     for tok in line_toks:
@@ -66,5 +67,6 @@ def get_line(line_toks):
         else:
             chars.append("  ")
     return "".join(chars)
+
 
 print("Reloaded!")

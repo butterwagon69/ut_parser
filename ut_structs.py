@@ -1,5 +1,16 @@
-from module_types import single, integer, idx, dword, word, byte, sized_ascii_z
-from construct import Struct, this, Computed, Probe
+from module_types import (
+    single,
+    integer,
+    idx,
+    dword,
+    word,
+    byte,
+    sized_ascii_z,
+    float,
+    qword,
+)
+from construct import Struct, this, Probe
+from module_types import Computed
 
 color = Struct("R" / byte, "G" / byte, "B" / byte, "A" / byte)
 
@@ -77,6 +88,68 @@ motion_chunk = Struct(
     "num_anims" / idx,
     "anim_tracks" / analog_track[this.num_anims],
     "root_track" / analog_track,
+)
+
+bounding_box = Struct("min" / vector, "max" / vector, "valid" / byte)
+
+bounding_sphere = Struct(
+    "center" / vector, "radius" / float  # only valid if version > 61
+)
+
+bsp_node = Struct(
+    "plane" / plane,
+    "zone_mask" / qword,
+    "node_flags" / byte,
+    "vert_pool_index" / idx,
+    "suface_index" / idx,
+    "front_index" / idx,
+    "back_index" / idx,
+    "plane_index" / idx,
+    "collision_bound_index" / idx,
+    "render_bound_index" / idx,
+    "zone_index" / byte[2],
+    "num_vertices" / byte,
+    "leaf_index" / dword[2],
+)
+
+bsp_surface = Struct(
+    "texture_index" / idx,
+    "poly_flags" / dword,
+    "p_base" / idx,
+    "v_normal" / idx,
+    "v_texture_u" / idx,
+    "v_texture_v" / idx,
+    "lightmap_index" / idx,
+    "brush_poly_index" / idx,
+    "pan_u" / word,
+    "pan_v" / word,
+    "actor" / idx,
+)
+
+f_vertex = Struct("p_vertex" / idx, "side_index" / idx)
+
+zone = Struct(
+    "actor" / idx,
+    "connectivity" / qword,
+    "visibility" / qword,
+    "last_render_time" / float,
+)
+
+lightmap = Struct(
+    "data_offset" / dword,
+    "pan" / vector,
+    "u_clamp" / idx,
+    "v_clamp" / idx,
+    "u_scale" / float,
+    "v_scale" / float,
+    "light_actors_index" / dword,
+)
+
+leaf = Struct(
+    "zone_index" / idx,
+    "permeating_index" / idx,
+    "volumetric_index" / idx,
+    "visible_zones" / qword,
 )
 
 struct_map = {
