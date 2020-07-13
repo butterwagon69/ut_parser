@@ -114,7 +114,7 @@ value_switch = Switch(
 ut_property = Struct(
     "name_index" / idx,
     "prop_name" / Computed(lambda x: x._root.names[x.name_index].name),
-    "more" / Computed(this.name_index != 0),
+    "more" / Computed(lambda x: x.prop_name != "None"),
     "value"
     / If(this.more, Struct("property_info" / property_info, "data" / value_switch,),),
 )
