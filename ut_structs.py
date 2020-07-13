@@ -128,12 +128,7 @@ bsp_surface = Struct(
 
 f_vertex = Struct("p_vertex" / idx, "side_index" / idx)
 
-zone = Struct(
-    "actor" / idx,
-    "connectivity" / qword,
-    "visibility" / qword,
-    "last_render_time" / float,
-)
+zone = Struct("actor" / idx, "connectivity" / qword, "visibility" / qword,)
 
 lightmap = Struct(
     "data_offset" / dword,

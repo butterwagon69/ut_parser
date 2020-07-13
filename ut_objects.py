@@ -216,7 +216,6 @@ model = Struct(
     "zones" / zone[this.num_zones],
     "num_polys" / idx,
     "num_lightmaps" / idx,
-    Probe(),
     "lightmaps" / lightmap[this.num_lightmaps],
     "num_lightbits" / idx,
     "lightbits" / byte[this.num_lightbits],
