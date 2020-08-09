@@ -9,7 +9,7 @@ from module_types import (
     float,
     qword,
 )
-from construct import Struct, this, Probe
+from construct import Struct, this, Probe, Int16sl
 from module_types import Computed
 
 color = Struct("R" / byte, "G" / byte, "B" / byte, "A" / byte)
@@ -43,16 +43,8 @@ polygon = Struct(
     "item_name" / idx,
     "i_link" / idx,
     "i_brush_poly" / idx,
-    "pan_u_base" / word,
-    "pan_v_base" / word,
-    "pan_u"
-    / Computed(
-        lambda x: x.pan_u_base | 0xFFFF0000 if x.pan_u_base > 0x8000 else x.pan_u_base
-    ),
-    "pan_v"
-    / Computed(
-        lambda x: x.pan_v_base | 0xFFFF0000 if x.pan_v_base > 0x8000 else x.pan_v_base
-    ),
+    "pan_u" / Int16sl,
+    "pan_v" / Int16sl,
 )
 
 url = Struct(
