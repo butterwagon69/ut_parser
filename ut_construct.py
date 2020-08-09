@@ -73,7 +73,6 @@ export_header = Struct(
     "flags" / object_flags,
     "serial_size" / idx,
     "serial_offset" / If(this.serial_size, idx),
-    "data" / Pointer(this.serial_offset, HexDump(Bytes(this.serial_size))),
 )
 
 
@@ -88,7 +87,7 @@ export_object = Struct(
         this.serial_size,
         Pointer(
             this.serial_offset,
-            Switch(lambda x: str(x.cls_name).lower(), ut_object_map),
+            Switch(lambda x: str(x.cls_name).lower(), ut_object_map, default=HexDump(Bytes(this.serial_size))),
         ),
     ),
 )
@@ -128,13 +127,11 @@ import_object = Struct(
 
 package = Struct(
     "header" / header,
-    "header_indexed" / Pointer(0, RawCopy(header)),
     "names" / (Pointer(this.header.name_offset, name[this.header.name_count])),
     "import_objs"
     / (Pointer(this.header.import_offset, import_object[this.header.import_count])),
     "export_headers"
     / Pointer(
-        # this.header.export_offset, export_object[this.header.export_count]
         this.header.export_offset,
         export_header[this.header.export_count],
     ),

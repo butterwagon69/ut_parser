@@ -208,6 +208,8 @@ class If(construct.IfThenElse):
         super(If, self).__init__(condfunc, thensubcon, construct.Pass)
 
     def _build(self, obj, stream, context, path):
+        if obj is None:
+            return None
         condfunc = self.condfunc
         try:
             if callable(condfunc):

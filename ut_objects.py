@@ -50,9 +50,7 @@ state_frame = Struct(
 )
 
 ut_object = Struct(
-    "start_pos" / Tell,
-    "flags" / Computed(this._.flags),
-    "state_frame" / If(this.flags.HasStack, state_frame),
+    "state_frame" / If(this._.flags.HasStack, state_frame),
     "property"
     / If(this._.cls_index, RepeatUntil(lambda x, lst, ctx: not x.more, ut_property)),
 )
@@ -117,9 +115,7 @@ texture = Struct(
     / Struct(
         "pos_after" / dword,
         "block_size" / idx,
-        "start" / Tell,
-        "length" / Computed(this.pos_after - this.start),
-        "imgbytes" / HexDump(Bytes(this.length)),
+        "imgbytes" / HexDump(Bytes(this.block_size)),
         "width" / dword,
         "height" / dword,
         "widthbits" / byte,
@@ -231,68 +227,75 @@ model = Struct(
     "linked" / dword,
 )
 
+default_object = Struct(
+    *ut_object.subcons,
+    "raw" / Pointer(
+        this._.serial_offset, 
+        HexDump(Bytes(this._.serial_size))
+    )
+)
 
 # 2d Objects
 # palette = ut_object
 # font = ut_object
 # texture = ut_object
-cubemap = ut_object
-fire = ut_object
-ice_texture = ut_object
-water_texture = ut_object
-wave_texture = ut_object
-wet_texture = ut_object
-fluid_texture = ut_object
-movie_texture = ut_object
-# scripted_texture = ut_object
+cubemap = default_object
+fire = default_object
+ice_texture = default_object
+water_texture = default_object
+wave_texture = default_object
+wet_texture = default_object
+fluid_texture = default_object
+movie_texture = default_object
+# scripted_texture = default_object
 # 3d Objects
-# primitive = ut_object
-mesh = ut_object
-lod_mesh = ut_object
-skeletal_mesh = ut_object
-vert_mesh = ut_object
-static_mesh = ut_object
-# animation = ut_object
-mesh_animation = ut_object
-index_animation = ut_object
-index_buffer = ut_object
-# brush = ut_object
-mover = ut_object
-# model = ut_object
-# polys = ut_object
+# primitive = default_object
+mesh = default_object
+lod_mesh = default_object
+skeletal_mesh = default_object
+vert_mesh = default_object
+static_mesh = default_object
+# animation = default_object
+mesh_animation = default_object
+index_animation = default_object
+index_buffer = default_object
+# brush = default_object
+mover = default_object
+# model = default_object
+# polys = default_object
 # Sounds
-# sound = ut_object
-# sound_group = ut_object
-# procedural_sound = ut_object
-# music = ut_object
+# sound = default_object
+# sound_group = default_object
+# procedural_sound = default_object
+# music = default_object
 # code
-null = ut_object
-# text_buffer = ut_object
-# field = ut_object
-const = ut_object
-enum = ut_object
-# property = ut_object
-byte_property = ut_object
-int_property = ut_object
-bool_property = ut_object
-float_property = ut_object
-# object_property = ut_object
-class_property = ut_object
-name_property = ut_object
-struct_property = ut_object
-str_property = ut_object
-array_property = ut_object
-fixed_array_property = ut_object
-map_property = ut_object
-string_property = ut_object
-delegate_property = ut_object
-pointer_property = ut_object
-function = ut_object
+null = default_object
+# text_buffer = default_object
+# field = default_object
+const = default_object
+enum = default_object
+# property = default_object
+byte_property = default_object
+int_property = default_object
+bool_property = default_object
+float_property = default_object
+# object_property = default_object
+class_property = default_object
+name_property = default_object
+struct_property = default_object
+str_property = default_object
+array_property = default_object
+fixed_array_property = default_object
+map_property = default_object
+string_property = default_object
+delegate_property = default_object
+pointer_property = default_object
+function = default_object
 # Other
-package = ut_object
-# level_base = ut_object
-level = ut_object
-# package_check_info = ut_object
+package = default_object
+# level_base = default_object
+level = default_object
+# package_check_info = default_object
 
 
 ut_object_map = {
