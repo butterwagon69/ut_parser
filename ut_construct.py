@@ -10,6 +10,7 @@ from construct import (
     stream_write,
     IntegerError,
     If,
+    IfThenElse,
     Bytes,
     Const,
     BytesInteger,
@@ -31,7 +32,7 @@ from construct import (
 import construct
 from construct.lib import byte2int, integertypes, int2byte
 
-from module_types import idx, word, dword, qword, uuid, string, Computed, If
+from module_types import idx, word, dword, qword, uuid, string, ascii_z, Computed, If
 from enums import object_flags, package_flags
 from ut_objects import ut_object_map
 
@@ -87,7 +88,11 @@ export_object = Struct(
         this.serial_size,
         Pointer(
             this.serial_offset,
-            Switch(lambda x: str(x.cls_name).lower(), ut_object_map, default=HexDump(Bytes(this.serial_size))),
+            Switch(
+                lambda x: str(x.cls_name).lower(),
+                ut_object_map,
+                default=HexDump(Bytes(this.serial_size)),
+            ),
         ),
     ),
 )
@@ -106,11 +111,12 @@ header = Struct(
     "import_offset" / dword,
     "uuid" / uuid,
     "generation_info_count" / dword,
-    "export_count" / dword,  # this needs to be repeated genreation_info_count times
-    "name_count" / dword,
 )
 
-name = Struct("name" / string, "pointer" / dword)
+name = Struct(
+    "name" / IfThenElse(this._root.header.version >= 64, string, ascii_z),
+    "pointer" / dword,
+)
 
 
 import_object = Struct(
@@ -131,10 +137,7 @@ package = Struct(
     "import_objs"
     / (Pointer(this.header.import_offset, import_object[this.header.import_count])),
     "export_headers"
-    / Pointer(
-        this.header.export_offset,
-        export_header[this.header.export_count],
-    ),
+    / Pointer(this.header.export_offset, export_header[this.header.export_count],),
     "export_objects"
     / (Pointer(this.header.export_offset, export_object[this.header.export_count])),
 )

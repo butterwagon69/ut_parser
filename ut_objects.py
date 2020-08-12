@@ -8,6 +8,7 @@ from construct import (
     RepeatUntil,
     Tell,
     Pointer,
+    IfThenElse,
 )
 from module_types import (
     byte,
@@ -39,6 +40,15 @@ from ut_structs import (
     zone,
     lightmap,
     leaf,
+    mesh_vertex,
+    triangle,
+    anim_seq,
+    struct_texture,
+    connect,
+    rotator,
+    wedge,
+    face,
+    material,
 )
 
 state_frame = Struct(
@@ -227,12 +237,86 @@ model = Struct(
     "linked" / dword,
 )
 
+mesh = Struct(
+    *primitive.subcons,
+    "burn0" / If(this._root.header.version > 61, dword),
+    "stream_pos" / Tell,
+    "num_verts" / idx,
+    "verts" / mesh_vertex[this.num_verts],
+    "burn1" / If(this._root.header.version > 61, dword),
+    "num_tris" / idx,
+    "tris" / triangle[this.num_tris],
+    "num_anim_seqs" / idx,
+    "anim_seqs" / anim_seq[this.num_anim_seqs],
+    "burn2" / If(this._root.header.version > 61, dword),
+    "num_connects" / idx,
+    "connects" / connect[this.num_connects],
+    "bounding_box1" / bounding_box,
+    "bounding_sphere1" / bounding_sphere,
+    "burn3" / If(this._root.header.version > 61, dword),
+    "num_vert_links" / idx,
+    "vert_links" / dword[this.num_vert_links],
+    "num_textures" / idx,
+    "textures" / struct_texture[this.num_textures],
+    "num_bounding_boxes" / idx,
+    "bounding_boxes" / bounding_box[this.num_bounding_boxes],
+    "num_bounding_spheres" / idx,
+    "bounding_spheres" / bounding_sphere[this.num_bounding_spheres],
+    "frame_verts" / dword,
+    "anim_frames" / dword,
+    "and_flags" / dword,
+    "or_flags" / dword,
+    "scale" / vector,
+    "origin" / vector,
+    "rot_origin" / rotator,
+    "current_poly" / dword,
+    "current_vertex" / dword,
+    "num_lods"
+    / IfThenElse(
+        this._root.header.version >= 66,
+        idx,
+        IfThenElse(
+            this._root.header.version == 65,
+            Computed(lambda x: 1),
+            Computed(lambda x: 0),
+        ),
+    ),
+    "lods" / float[this.num_lods],
+)
+
+lod_mesh = Struct(
+    *mesh.subcons,
+    "num_collapse_points" / idx,
+    "collapse_points" / word[this.num_collapse_points],
+    "num_face_levels" / idx,
+    "face_levels" / word[this.num_face_levels],
+    "num_faces" / idx,
+    "faces" / face[this.num_faces],
+    "num_collapse_wedge_thus" / idx,
+    "collapse_wedge_thus" / word[this.num_collapse_wedge_thus],
+    "num_wedges" / idx,
+    "wedges" / wedge[this.num_wedges],
+    "num_materials" / idx,
+    "materials" / material[this.num_materials],
+    "num_special_faces" / idx,
+    "special_faces" / face[this.num_special_faces],
+    "model_verts" / dword,
+    "special_verts" / dword,
+    "mesh_scale_max" / float,
+    "lod_hysteresis" / float,
+    "lod_strength" / float,
+    "lod_min_verts" / dword,
+    "lod_morph" / float,
+    "lod_z_displace" / float,
+    "num_remap_anim_verts" / idx,
+    "remap_anim_verts" / word[this.num_remap_anim_verts],
+    "old_frame_verts" / dword,
+)
+
+
 default_object = Struct(
     *ut_object.subcons,
-    "raw" / Pointer(
-        this._.serial_offset, 
-        HexDump(Bytes(this._.serial_size))
-    )
+    "raw" / Pointer(this._.serial_offset, HexDump(Bytes(this._.serial_size))),
 )
 
 # 2d Objects
@@ -250,8 +334,8 @@ movie_texture = default_object
 # scripted_texture = default_object
 # 3d Objects
 # primitive = default_object
-mesh = default_object
-lod_mesh = default_object
+# mesh = default_object
+# lod_mesh = default_object
 skeletal_mesh = default_object
 vert_mesh = default_object
 static_mesh = default_object

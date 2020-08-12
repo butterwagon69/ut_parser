@@ -120,6 +120,58 @@ bsp_surface = Struct(
 
 f_vertex = Struct("p_vertex" / idx, "side_index" / idx)
 
+mesh_vertex = Struct(
+    # if game is not Deus Ex, these will be sized differently
+    "x" / Int16sl,
+    "y" / Int16sl,
+    "z" / Int16sl,
+    "trash" / Int16sl,
+)
+
+triangle = Struct(
+    "v1" / word,
+    "v2" / word,
+    "v3" / word,
+    "u1" / byte,
+    "v1" / byte,
+    "u2" / byte,
+    "v2" / byte,
+    "u3" / byte,
+    "v3" / byte,
+    "flags" / dword,
+    "texture_index" / dword,
+)
+
+
+anim_seq_notify = Struct("time" / float, "function_index" / idx)
+
+
+anim_seq = Struct(
+    "name_index" / idx,
+    "group_index" / idx,
+    "startframe" / dword,
+    "numframes" / dword,
+    "num_notifys" / idx,
+    "notifys" / anim_seq_notify[this.num_notifys],
+    "rate" / float,
+)
+
+
+connect = Struct("num_vert_tiangles" / dword, "triangle_list_offset" / dword)
+
+struct_texture = Struct("index" / idx)
+
+face = Struct(
+    "wedge_index_1" / word,
+    "wedge_index_2" / word,
+    "wedge_index_3" / word,
+    "material_index" / word,
+)
+
+material = Struct("flags" / dword, "texture_index" / dword,)
+
+wedge = Struct("vertex_index" / word, "u" / byte, "v" / byte,)
+
 zone = Struct("actor" / idx, "connectivity" / qword, "visibility" / qword,)
 
 lightmap = Struct(

@@ -162,6 +162,13 @@ sized_ascii_z = construct.StringEncoded(
     "ascii",
 )
 
+ascii_z = construct.StringEncoded(
+    construct.NullTerminated(
+        construct.GreedyBytes, term=construct.encodingunit("ascii")
+    ),
+    "ascii",
+)
+
 
 def longstring_emitseq(ksy, bitwise):
     return [
