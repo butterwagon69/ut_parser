@@ -1,5 +1,5 @@
 from construct import Enum, FlagsEnum, BitsInteger
-from module_types import dword, byte, word
+from .module_types import dword, byte, word
 
 object_flags = FlagsEnum(
     dword,

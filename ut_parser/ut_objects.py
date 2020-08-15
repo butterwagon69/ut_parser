@@ -9,8 +9,9 @@ from construct import (
     Tell,
     Pointer,
     IfThenElse,
+    Bytes,
 )
-from module_types import (
+from .module_types import (
     byte,
     idx,
     word,
@@ -22,9 +23,9 @@ from module_types import (
     If,
     Computed,
 )
-import enums
-from properties import ut_property
-from ut_structs import (
+from . import enums
+from .properties import ut_property
+from .ut_structs import (
     polygon,
     color,
     named_bone,
@@ -49,6 +50,18 @@ from ut_structs import (
     wedge,
     face,
     material,
+)
+
+# Utility Struct to grab unparsed stuff
+rest = Struct(
+    "stream_position" / Tell,
+    "remaining"
+    / Computed(
+        lambda this: this._._.serial_offset
+        + this._._.serial_size
+        - this.stream_position
+    ),
+    "raw" / HexDump(Bytes(this.remaining)),
 )
 
 state_frame = Struct(
@@ -239,21 +252,20 @@ model = Struct(
 
 mesh = Struct(
     *primitive.subcons,
-    "burn0" / If(this._root.header.version > 61, dword),
-    "stream_pos" / Tell,
+    "pos0" / If(this._root.header.version > 61, dword),
     "num_verts" / idx,
     "verts" / mesh_vertex[this.num_verts],
-    "burn1" / If(this._root.header.version > 61, dword),
+    "pos1" / If(this._root.header.version > 61, dword),
     "num_tris" / idx,
     "tris" / triangle[this.num_tris],
     "num_anim_seqs" / idx,
     "anim_seqs" / anim_seq[this.num_anim_seqs],
-    "burn2" / If(this._root.header.version > 61, dword),
+    "pos2" / If(this._root.header.version > 61, dword),
     "num_connects" / idx,
     "connects" / connect[this.num_connects],
     "bounding_box1" / bounding_box,
     "bounding_sphere1" / bounding_sphere,
-    "burn3" / If(this._root.header.version > 61, dword),
+    "pos3" / If(this._root.header.version > 61, dword),
     "num_vert_links" / idx,
     "vert_links" / dword[this.num_vert_links],
     "num_textures" / idx,
@@ -311,6 +323,7 @@ lod_mesh = Struct(
     "num_remap_anim_verts" / idx,
     "remap_anim_verts" / word[this.num_remap_anim_verts],
     "old_frame_verts" / dword,
+    "rest" / rest,
 )
 
 

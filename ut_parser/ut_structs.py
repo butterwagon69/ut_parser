@@ -1,4 +1,4 @@
-from module_types import (
+from .module_types import (
     single,
     integer,
     idx,
@@ -8,9 +8,9 @@ from module_types import (
     sized_ascii_z,
     float,
     qword,
+    Computed,
 )
 from construct import Struct, this, Probe, Int16sl
-from module_types import Computed
 
 color = Struct("R" / byte, "G" / byte, "B" / byte, "A" / byte)
 

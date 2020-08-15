@@ -13,7 +13,7 @@ from construct import (
     Byte,
     Union,
 )
-from module_types import (
+from .module_types import (
     byte,
     idx,
     word,
@@ -25,9 +25,9 @@ from module_types import (
     sized_ascii_z,
     Computed,
 )
-from enums import property_types
+from .enums import property_types
 
-from ut_structs import (
+from .ut_structs import (
     color,
     vector,
     pointregion,

@@ -32,9 +32,9 @@ from construct import (
 import construct
 from construct.lib import byte2int, integertypes, int2byte
 
-from module_types import idx, word, dword, qword, uuid, string, ascii_z, Computed, If
-from enums import object_flags, package_flags
-from ut_objects import ut_object_map
+from .module_types import idx, word, dword, qword, uuid, string, ascii_z, Computed, If
+from .enums import object_flags, package_flags
+from .ut_objects import ut_object_map
 
 
 def get_object_path(path, limit, index):
