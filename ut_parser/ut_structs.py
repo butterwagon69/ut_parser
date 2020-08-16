@@ -129,9 +129,9 @@ mesh_vertex = Struct(
 )
 
 triangle = Struct(
-    "v1" / word,
-    "v2" / word,
-    "v3" / word,
+    "vertex1" / word,
+    "vertex2" / word,
+    "vertex3" / word,
     "u1" / byte,
     "v1" / byte,
     "u2" / byte,
