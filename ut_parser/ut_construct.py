@@ -11,9 +11,9 @@ from construct import (
     Int32sl,
 )
 
-from module_types import idx, word, dword, uuid, string, ascii_z, Computed, If
-from enums import object_flags, package_flags
-from ut_objects import ut_object_map
+from .module_types import idx, word, dword, uuid, string, ascii_z, Computed, If
+from .enums import object_flags, package_flags
+from .ut_objects import ut_object_map
 
 
 def get_object_path(path, limit, index):
