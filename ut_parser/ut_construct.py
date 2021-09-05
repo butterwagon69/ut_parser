@@ -1,40 +1,19 @@
 from construct import (
-    Flag,
-    Enum,
     this,
     Struct,
-    Sequence,
     Pointer,
-    Construct,
-    stream_read,
-    stream_write,
-    IntegerError,
-    If,
     IfThenElse,
     Bytes,
     Const,
-    BytesInteger,
-    Computed,
     HexDump,
     Index,
-    Enum,
-    Probe,
-    StringEncoded,
-    Prefixed,
-    GreedyBytes,
-    NullTerminated,
-    encodingunit,
-    FlagsEnum,
     Switch,
     Int32sl,
-    RawCopy,
 )
-import construct
-from construct.lib import byte2int, integertypes, int2byte
 
-from .module_types import idx, word, dword, qword, uuid, string, ascii_z, Computed, If
-from .enums import object_flags, package_flags
-from .ut_objects import ut_object_map
+from module_types import idx, word, dword, uuid, string, ascii_z, Computed, If
+from enums import object_flags, package_flags
+from ut_objects import ut_object_map
 
 
 def get_object_path(path, limit, index):
@@ -46,7 +25,7 @@ def get_object_path(path, limit, index):
     while limit != 0:
         if index == 0:
             break
-        elif index < 0:
+        if index < 0:
             if abs(index) <= len(import_table):
                 i = import_table[abs(index) - 1]
                 s = name_table[i.object_index].name + "."

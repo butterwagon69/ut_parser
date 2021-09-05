@@ -1,17 +1,14 @@
 from construct import (
     Struct,
-    If,
     this,
     BitStruct,
     Flag,
     BitsInteger,
-    Probe,
     Switch,
     IfThenElse,
     Bytes,
     PascalString,
     Byte,
-    Union,
 )
 from .module_types import (
     byte,
@@ -22,8 +19,6 @@ from .module_types import (
     If,
     Computed,
     float,
-    sized_ascii_z,
-    Computed,
 )
 from .enums import property_types
 
